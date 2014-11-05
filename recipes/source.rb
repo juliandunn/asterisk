@@ -9,9 +9,10 @@ node['asterisk']['source']['packages'].each do |pkg|
 end
 
 version = node['asterisk']['source']['version']
+certified = true if version.match(/cert/)
 chksum = node['asterisk']['source']['checksum']
-source_tarball = "asterisk-#{version}.tar.gz"
-source_url_prefix = "http://downloads.asterisk.org/pub/telephony/asterisk/"
+source_tarball = "#{'certified-' if certified}asterisk-#{version}.tar.gz"
+source_url_prefix = "http://downloads.asterisk.org/pub/telephony/#{'certified-' if certified}asterisk/"
 source_url_prefix << 'releases/' unless version.match(/current/)
 source_url = node['asterisk']['source']['url'] ||
     source_url_prefix + source_tarball
@@ -45,7 +46,7 @@ bash "install_asterisk" do
   cwd File.dirname(source_path)
   code <<-EOH
     tar zxf #{source_path}
-    cd asterisk-#{version =~ /(\d*)-current/ ? "#{$1}.*" : version}
+    cd #{'certified-' if certified}asterisk-#{version =~ /(\d*)-current/ ? "#{$1}.*" : version}
     ./contrib/scripts/install_prereq install
     ./configure --prefix=#{node['asterisk']['prefix']['bin']} --sysconfdir=#{node['asterisk']['prefix']['conf']} --localstatedir=#{node['asterisk']['prefix']['state']}
     make
